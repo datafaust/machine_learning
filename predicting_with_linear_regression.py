@@ -5,11 +5,17 @@ Created on Fri Apr 19 11:09:05 2019
 @author: lopezf
 """
 
+#for run in R, copy and paste into console without hash
+#library(reticulate)
+#use_virtualenv("root") #name the enviornment from conda to use
+#repl_python()
+
 #use linear regression to predict values-----------------------
 import pandas as pd
 import quandl, math
 import numpy as np
-from sklearn import preprocessing, cross_validation, svm
+from sklearn.model_selection import cross_validate
+from sklearn import preprocessing, svm
 from sklearn.linear_model import LinearRegression
 
 
@@ -19,7 +25,7 @@ from sklearn.linear_model import LinearRegression
 #df.head()
 #df.to_csv("stock_data.csv",index = False)
 
-df = pd.read_csv("stock_data.csv")
+df = pd.read_csv("data/stock_data.csv")
 
 
 #grab some features

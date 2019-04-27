@@ -1,0 +1,187 @@
+---
+title: 'Linear Regression: Predicting Housing Prices in Boston'
+author: "Fausto"
+date: "4/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+use_virtualenv("root") #name the enviornment from conda to use
+```
+
+## Importing Libraries
+
+Ran this project in rmarkdown using ```reticulate``` package in R. Run the following:
+
+```{r imports, eval=FALSE}
+library(reticulate)
+use_virtualenv("root") #name the enviornment from conda to use
+repl_python()
+```
+
+Now we can run python:
+
+```{python}
+import os
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/0000/Anaconda3/Library/plugins/platforms'
+import numpy as np
+import pandas as pd
+import scipy.stats as stats
+import matplotlib.pyplot as plt
+import sklearn
+from sklearn.datasets import load_boston
+boston = load_boston()
+```
+Size of the data:
+
+```{python}
+boston.keys()
+boston.data.shape
+```
+
+Features and description:
+
+```{python}
+print(boston.DESCR)
+```
+
+Convert to data frame and replace column names:
+
+```{python}
+bos = pd.DataFrame(boston.data)
+bos.head()
+```
+
+```{python}
+bos.columns = boston.feature_names
+bos.head()
+```
+
+pull out the prices and add to the dataframe:
+```{python}
+boston.target[:5]
+bos['PRICE'] = boston.target
+```
+
+Use the least squares method to estimate coefficients; we drop the column we plan to predict:
+```{python}
+from sklearn.linear_model import LinearRegression
+X = bos.drop('PRICE', axis = 1)
+
+#create a linear regression object
+lm = LinearRegression()
+lm
+```
+
+Some important functions:
+```{r, eval=FALSE}
+lm.fit() -> fits a linear model
+
+lm.predict() -> Predict Y using the linear model with estimated coefficients
+
+lm.score() -> Returns the coefficient of determination (R^2). A measure of how well observed outcomes are replicated by the model, as the proportion of total variation of outcomes explained by the model.
+```
+
+Fit the model:
+
+```{python}
+lm.fit(X, bos.PRICE)
+print('estimated intercept coeff', lm.intercept_)
+```
+
+Now construct a dataframe with the coefficients to begin predictions:
+
+```{python}
+pd.DataFrame(list(zip(X.columns,lm.coef_)),columns=['features','estimatedCoefficients'])
+```
+
+RM has a high correlation with prices as shown above. We can graph this in ggplot in R:
+
+```{r}
+rbos = py$bos
+library(ggplot2)
+ggplot(rbos, 
+       aes(RM, PRICE)) +
+  geom_point()
+```
+
+we can extract a sample of the predicted prices:
+
+```{python}
+lm.predict(X)[0:5]
+predicted_values = lm.predict(X)
+```
+
+And now we can graph them to compare true to predicted:
+
+```{r}
+rbos = py$bos #actual prices
+rpredicted_values = py$predicted_values
+rbos = cbind(rbos, rpredicted_values)
+ggplot(rbos, 
+       aes(PRICE,rpredicted_values)) +
+  geom_point()
+```
+
+We can calculate the mean squared error:
+
+```{python}
+mseFull = np.mean((bos.PRICE - lm.predict(X)) ** 2)
+print(mseFull)
+```
+
+
+we can try to calculate the mean square error for one feature to see it higher:
+```{python}
+lm = LinearRegression()
+lm.fit(X[['PTRATIO']], bos.PRICE)
+msePTRATIO = np.mean((bos.PRICE - lm.predict(X[['PTRATIO']])) ** 2)
+print(msePTRATIO)
+```
+
+Using just this one feature is not great.
+
+# Training and Validation
+
+We train and test by splitting our data into random sets on both train and test so that we reduce bias in either set:
+
+```{python}
+X_train, X_test, Y_train, Y_test = sklearn.model_selection.train_test_split(X, bos.PRICE, test_size = 0.33, random_state = 5)
+print(X_train.shape)
+print(X_test.shape)
+print(Y_train.shape)
+print(Y_test.shape)
+```
+
+build the model using the train-test data sets:
+
+```{python}
+lm = LinearRegression()
+lm.fit(X_train, Y_train)
+pred_train = lm.predict(X_train)
+pred_test = lm.predict(X_test)
+```
+
+now we can calculate the mean squared error for training and test data:
+
+```{python}
+print("Fit a model X_train, and calculate MSE with Y_train:", np.mean((Y_train - lm.predict(X_train)) ** 2)
+)
+```
+
+#Residual Plots
+
+Residual plots are a good way to visualize the errors in your data. If you have done a good job then your data should be randomly scattered around line zero. If you see structure in your data, that means your model is not capturing some thing. Maybe be there is a interaction between 2 variables that you are not considering, or maybe you are measuring time dependent data. If you get some structure in your data, you should go back to your model and check whether you are doing a good job with your parameters:
+
+```{python}
+plt.scatter(lm.predict(X_train), lm.predict(X_train) - Y_train, c = 'b', s = 40, alpha = .5)
+
+plt.scatter(lm.predict(X_test), lm.predict(X_test) - Y_test, c = 'g', s = 40)
+
+plt.hlines(y=0,xmin=0,xmax=50)
+plt.title('Residual Plot using training (blue) and test (green) data')
+plt.ylabel('Residuals')
+```
+

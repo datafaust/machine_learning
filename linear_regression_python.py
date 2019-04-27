@@ -5,8 +5,13 @@ Created on Wed Apr 17 15:43:28 2019
 @author: lopezf
 """
 
-#linear regressions from sentdex lesson-------------------------------------------------------------------------------
+#for run in R, copy and paste into console without hash
+#library(reticulate)
+#use_virtualenv("root") #name the enviornment from conda to use
+#repl_python()
 
+#linear regressions from sentdex lesson-------------------------------------------------------------------------------
+import os
 import pandas as pd
 import quandl, math
 import numpy as np
@@ -16,14 +21,15 @@ from sklearn.linear_model import LinearRegression
 
 
 #pull the data------------------------------------------------------------------------------
-quandl.ApiConfig.api_key = 'gXgcc7a9mHYgochSzsuX'
-df = quandl.get('WIKI/GOOGL')
-df.head()
-#write out then hash above
-os.chdir("~/data")
-df.to_csv("qandl_data.csv", index = False)
+# quandl.ApiConfig.api_key = 'gXgcc7a9mHYgochSzsuX'
+# df = quandl.get('WIKI/GOOGL')
+# df.head()
+# #write out then hash above
+# df.to_csv("data/stock_data.csv", index = False)
 
-
+#read data 
+df = pd.read_csv("data/stock_data.csv")
+ 
 #grab some features
 df = df[['Adj. Open','Adj. High','Adj. Low','Adj. Close','Adj. Volume']]
 df['HL_PCT'] = (df['Adj. High'] - df['Adj. Close']) / df['Adj. Close'] * 100.0
