@@ -19,8 +19,62 @@ At the TLC we've studied driver income to inform policy legislation. Recently le
 library(data.table)
 library(fasttime)
 library(dplyr)
-trips = read.fst
+library(fst)
+
+#releavant cols
+trip_cols = c('medallion', 'hack_license',
+              'pickup_datetime','dropoff_datetime',
+              'trip_time_in_secs', 'trip_distance')
+fare_cols = c('medallion', 'hack_license',
+              'pickup_datetime','fare_amount',
+              'surcharge')
+
+#read data
+trips = read.fst('C:/Users/0000/Documents/trip_1.fst',
+                 as.data.table = T,
+                 from =1,
+                 to = 100000,
+                 columns = trip_cols)
+
+trips_fare = read.fst('C:/Users/0000/Documents/trip_fare_1.fst',
+                 as.data.table = T,
+                 from =1,
+                 to = 1000000,
+                 columns = fare_cols)
 ```
+
+
+We merge the data to create one table that's easier to work with:
+
+```{r}
+trips = merge(trips,
+              trips_fare,
+              by = c("medallion", "hack_license","pickup_datetime"),
+              all.x = T)
+```
+
+Now we can begin to put together the statistics we believe represent a type of driver. Amount of hours worked can be very informative. we can start with pickup hours which are the unique count of hours a driver works:
+
+```{r}
+trips_agg =
+trips[
+  ,.(hours_per_day = uniqueN(substr(pickup_datetime,1,13)),
+     total_income = sum(fare_amount) + sum(surcharge),
+     total_distance = sum(trip_distance),
+     total_trip_hours = sum(trip_time_in_secs)/60
+     ),
+  .(hack_license,
+    day = substr(pickup_datetime,1,10))]
+```
+
+We can look at the distribution of work and other important factors:
+
+```{r}
+summary(trips_agg)
+```
+
+So how do we try and group drivers? We moved onto KNN. Caret is solid in R, but why not use the time to practice some python? I ran the machine learning process in python's scikit-learn. We start by extracting the 
+
 
 
 
