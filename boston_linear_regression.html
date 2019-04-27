@@ -378,10 +378,11 @@ $(document).ready(function () {
 
 <div id="importing-libraries" class="section level2">
 <h2>Importing Libraries</h2>
+<p>reference: <a href="https://bigdata-madesimple.com/how-to-run-linear-regression-in-python-scikit-learn/" class="uri">https://bigdata-madesimple.com/how-to-run-linear-regression-in-python-scikit-learn/</a></p>
 <p>Ran this project in rmarkdown using <code>reticulate</code> package in R. Run the following:</p>
 <pre class="r"><code>library(reticulate)
 use_virtualenv(&quot;root&quot;) #name the enviornment from conda to use
-repl_python()</code></pre>
+#repl_python() #if you want to go line by line in the console</code></pre>
 <p>Now we can run python:</p>
 <pre class="python"><code>import os
 os.environ[&#39;QT_QPA_PLATFORM_PLUGIN_PATH&#39;] = &#39;C:/Users/0000/Anaconda3/Library/plugins/platforms&#39;

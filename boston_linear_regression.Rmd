@@ -13,12 +13,15 @@ use_virtualenv("root") #name the enviornment from conda to use
 
 ## Importing Libraries
 
+reference:
+https://bigdata-madesimple.com/how-to-run-linear-regression-in-python-scikit-learn/
+
 Ran this project in rmarkdown using ```reticulate``` package in R. Run the following:
 
 ```{r imports, eval=FALSE}
 library(reticulate)
 use_virtualenv("root") #name the enviornment from conda to use
-repl_python()
+#repl_python() #if you want to go line by line in the console
 ```
 
 Now we can run python:
