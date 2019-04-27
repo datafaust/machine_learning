@@ -22,15 +22,128 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 import matplotlib.pyplot as plt
-df = sklearn.datasets.load_diabetes()
+import sklearn
+from sklearn.model_selection import train_test_split
+#df = sklearn.datasets.load_diabetes()
+#df = pd.DataFrame(data= np.c_[df['data'], df['target']],
+#                     columns= df['feature_names'] + ['target'])
+df = pd.read_csv('data/diabetes_data.csv')
+df.head()
 ```
 
-## Including Plots
+First we drop our target column for our predictors:
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{python}
+#create a dataframe with all training data except the target column
+X = df.drop(columns=['diabetes'])
+#check that the target variable has been removed
+X.head()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+We extract the target variable:
+
+```{python}
+y = df['diabetes'].values
+y[0:5]
+```
+
+Split the dataset into train and test:
+
+```{python}
+X_train, X_test, y_train, y_test = train_test_split(X,y,
+test_size = .2, random_state=1, stratify=y)
+```
+
+Taken from the tutorial:
+‘train_test_split’ takes in 5 parameters. The first two parameters are the input and target data we split up earlier. Next, we will set ‘test_size’ to 0.2. This means that 20% of all the data will be used for testing, which leaves 80% of the data as training data for the model to learn from. Setting ‘random_state’ to 1 ensures that we get the same split each time so we can reproduce our results.
+
+Setting ‘stratify’ to y makes our training split represent the proportion of each value in the y variable. For example, in our dataset, if 25% of patients have diabetes and 75% don’t have diabetes, setting ‘stratify’ to y will ensure that the random split has 25% of patients with diabetes and 75% of patients without diabetes.
+
+Now to set the model:
+
+```{python}
+from sklearn.neighbors import KNeighborsClassifier
+# Create KNN classifier
+knn = KNeighborsClassifier(n_neighbors = 3)
+# Fit the classifier to the data
+knn.fit(X_train,y_train)
+```
+
+#Testing the model
+
+We can now test our model to see how all the predictors interact to tell if someone has diabetes or not:
+
+```{python}
+#show first 5 model predictions on the test data
+knn.predict(X_test)[0:5]
+```
+
+We can see that the model predicted ‘no diabetes’ for the first 4 patients in the test set and ‘has diabetes’ for the 5th patient.
+
+Now let’s see how our accurate our model is on the full test set. To do this, we will use the ‘score’ function and pass in our test input and target data to see how well our model predictions match up to the actual results.
+
+```{python}
+#check accuracy of our model on the test data
+knn.score(X_test, y_test)
+```
+
+This is a good start but we can improve this model.
+
+#K-Fold Cross Validation
+
+We can improve the model by cycling through the dataset when it is randomly split into 'k' groups. We essentially break the data into groups and do a round robin where every group gets to be a test set. We can then cross-validate to see if our results are consistent. The one used above is called 'holdout' and is not as good as cross validating. 
+
+```{python}
+from sklearn.model_selection import cross_val_score
+import numpy as np
+#create a new KNN model
+knn_cv = KNeighborsClassifier(n_neighbors=3)
+
+#train model with cv of 5 
+cv_scores = cross_val_score(knn_cv, X, y, cv=5)
+
+#print each cv score (accuracy) and average them
+print(cv_scores)
+print('cv_scores mean:{}'.format(np.mean(cv_scores)))
+```
+
+Using cross-validation, our mean score is about 71.36%. This is a more accurate representation of how our model will perform on unseen data than our earlier testing using the holdout method.
+
+# Hypertuning
+
+When thinking about how many neighbors we used 3 above without thinking why. Hypertuning is when we look for the optimal break. 
+
+We use GridSearchCV which works by training our model multiple times on a range of parameters that we specify. That way, we can test our model with each parameter and figure out the optimal values to get the best accuracy results.
+
+For our model, we will specify a range of values for 'n_neighbors' in order to see which value works best for our model. To do this, we will create a dictionary, setting 'n_neighbors' as the key and using numpy to create an array of values from 1 to 24.
+
+Our new model using grid search will take in a new k-NN classifier, our param_grid and a cross-validation value of 5 in order to find the optimal value for ‘n_neighbors’.
+
+```{python}
+from sklearn.model_selection import GridSearchCV
+#create new a knn model
+knn2 = KNeighborsClassifier()
+#create a dictionary of all values we want to test for n_neighbors
+param_grid = {'n_neighbors': np.arange(1, 25)}
+#use gridsearch to test all values for n_neighbors
+knn_gscv = GridSearchCV(knn2, param_grid, cv=5)
+#fit model to data
+knn_gscv.fit(X, y)
+```
+
+After training, we can check which of our values for 'n_neighbors' that we tested performed the best. To do this, we will call 'best_params_' on our model.
+
+
+```{python}
+#check top performing n_neighbors value
+knn_gscv.best_params_
+```
+
+We can see that 14 is the optimal n_neighbors. We can use the best_score_ function to check the accuracy of our model. Best_score outputs the mean accuracy of the scores obtained through cross_validation:
+
+
+```{python}
+#check mean score for the top performing value of n_neighbors
+knn_gscv.best_score_
+```
