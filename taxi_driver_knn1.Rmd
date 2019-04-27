@@ -1,0 +1,46 @@
+---
+title: "What Kind of Taxi Driver are You?"
+author: "Fausto"
+date: "4/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+use_virtualenv("root") #name the enviornment from conda to use
+```
+
+## What are we trying to do?
+
+At the TLC we've studied driver income to inform policy legislation. Recently legislation passed on xyz. Looking back at 2013 there is public data available to test similar theories on driver types. We will begin this analysis with a look through the data and some basic calculations. Let's begin. 
+
+```{r}
+library(data.table)
+library(fasttime)
+library(dplyr)
+trips = read.fst
+```
+
+
+
+```{python}
+import os
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/0000/Anaconda3/Library/plugins/platforms'
+import numpy as np
+import pandas as pd
+import scipy.stats as stats
+import matplotlib.pyplot as plt
+import sklearn
+from sklearn.model_selection import train_test_split
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
